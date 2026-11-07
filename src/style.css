@@ -1,0 +1,902 @@
+/* ============================================================
+   ENTER FINALE
+   前半: 普通のメール作成画面。後半: ライブステージ。
+   演出の時間は --fx（1 = 標準、0.5 = 2倍速）を掛けて調整する。
+   ============================================================ */
+
+:root {
+  --bg: #f4f1ea;
+  --card: #ffffff;
+  --text: #24231f;
+  --muted: #7a776f;
+  --line: #e4dfd3;
+  --accent: #2f6fed;
+  --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(30, 25, 10, 0.06), 0 12px 40px -12px rgba(30, 25, 10, 0.18);
+  --fx: 1;
+  --hit-strength: 0.8;
+  --vvh: 100dvh;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1b1f;
+    --card: #26262c;
+    --text: #ecebe6;
+    --muted: #9a99a3;
+    --line: #3a3a42;
+    --accent: #5b8cff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 40px -12px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    'Inter', 'Helvetica Neue', Arial, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', Meiryo,
+    'Noto Sans JP', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+  transition: background-color 300ms ease;
+}
+
+/* ---------------------------------------------------------- トップバー */
+
+#topbar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(10px + var(--sat)) calc(16px + var(--sar)) 10px calc(16px + var(--sal));
+  font-size: 13px;
+  color: var(--muted);
+  pointer-events: none;
+}
+#topbar > * {
+  pointer-events: auto;
+}
+.topbar-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.6;
+  transition: opacity 200ms;
+}
+.topbar-right:hover,
+.topbar-right:focus-within {
+  opacity: 1;
+}
+.icon-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: inherit;
+  line-height: 1;
+}
+.icon-btn:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+.volume input {
+  width: 80px;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+.status {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.12);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------- 入力画面 */
+
+.composer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(56px + var(--sat)) calc(16px + var(--sar)) calc(24px + var(--sab)) calc(16px + var(--sal));
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.composer-card {
+  width: min(680px, 100%);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 18px 20px 14px;
+  transition:
+    transform 120ms ease-out,
+    box-shadow 300ms ease;
+  transform-origin: 50% 60%;
+}
+
+/* 打鍵ごとの小さな反応 */
+.fx-hit .composer-card {
+  transform: scale(calc(1 + 0.012 * var(--hit-strength)));
+  transition-duration: 40ms;
+}
+
+/* 入力が始まると、ほんの少しだけ熱を帯びる */
+[data-state='typing'] .composer-card {
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px rgba(255, 120, 60, 0.08),
+    0 0 60px -20px rgba(255, 120, 60, 0.35);
+}
+
+.composer-meta {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--muted);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.meta-value {
+  color: var(--text);
+}
+
+.message {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.75;
+  padding: 10px 0;
+  caret-color: var(--accent);
+}
+.message::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.composer-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+kbd {
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: rgba(127, 127, 127, 0.06);
+}
+.send-btn {
+  appearance: none;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    transform 100ms,
+    filter 150ms;
+}
+.send-btn:hover {
+  filter: brightness(1.08);
+}
+.send-btn:active {
+  transform: translateY(1px);
+}
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 低い画面（スマホ横向き / キーボード表示中）は上寄せ */
+@media (max-height: 560px) {
+  .composer {
+    align-items: flex-start;
+    overflow: auto;
+  }
+  .message {
+    min-height: 110px;
+  }
+}
+@media (max-width: 480px) {
+  .composer-card {
+    padding: 14px 14px 10px;
+    border-radius: 12px;
+  }
+  .message {
+    min-height: 150px;
+    font-size: 16px; /* iOS のズーム防止 */
+  }
+  .composer-hint {
+    display: none;
+  }
+  .composer-actions {
+    justify-content: flex-end;
+  }
+  .send-btn {
+    padding: 10px 28px;
+  }
+  .volume {
+    display: none;
+  }
+}
+/* スマホでキーボード表示中：visualViewport の高さに合わせる */
+@media (pointer: coarse) {
+  .composer {
+    height: var(--vvh);
+    inset: 0 0 auto 0;
+    align-items: flex-start;
+    padding-top: calc(52px + var(--sat));
+  }
+}
+
+/* ---------------------------------------------------------- ステージ */
+
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  background: #070711;
+  transition: opacity 250ms ease;
+}
+.stage-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fx-stage .stage {
+  opacity: 1;
+}
+.fx-stage .composer {
+  opacity: 0;
+  transform: scale(0.92) translateY(-30px);
+  pointer-events: none;
+}
+.fx-stage #topbar .topbar-left {
+  opacity: 0;
+}
+.fx-stage #app,
+.fx-stage {
+  background: #070711;
+}
+.fx-stage .status {
+  color: #ddd;
+}
+
+/* --- 出現アニメーション（SVG グループ） --- */
+.anim {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  opacity: 0;
+}
+.fx-stage .anim-drums {
+  animation: pop-in calc(520ms * var(--fx)) cubic-bezier(0.2, 1.5, 0.4, 1) calc(120ms * var(--fx)) both;
+}
+.fx-stage .anim-amp-l {
+  animation: rise-in calc(480ms * var(--fx)) cubic-bezier(0.2, 1.2, 0.4, 1) calc(200ms * var(--fx)) both;
+}
+.fx-stage .anim-amp-r {
+  animation: rise-in calc(480ms * var(--fx)) cubic-bezier(0.2, 1.2, 0.4, 1) calc(260ms * var(--fx)) both;
+}
+.fx-stage .anim-guitar-l {
+  animation: fly-in-left calc(600ms * var(--fx)) cubic-bezier(0.2, 1.3, 0.4, 1) calc(240ms * var(--fx)) both;
+}
+.fx-stage .anim-guitar-r {
+  animation: fly-in-right calc(600ms * var(--fx)) cubic-bezier(0.2, 1.3, 0.4, 1) calc(300ms * var(--fx)) both;
+}
+.fx-stage .anim-lights {
+  animation: fade-in calc(400ms * var(--fx)) ease calc(150ms * var(--fx)) both;
+}
+.fx-stage .anim-crowd {
+  animation: rise-in calc(520ms * var(--fx)) cubic-bezier(0.2, 1.2, 0.4, 1) calc(320ms * var(--fx)) both;
+}
+.fx-stage .anim-sparks {
+  animation: fade-in calc(300ms * var(--fx)) ease calc(450ms * var(--fx)) both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(260px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fly-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-700px) rotate(-70deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fly-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(700px) rotate(70deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- 継続アニメーション（ステージ表示中ずっと） --- */
+.st-beam {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  mix-blend-mode: screen;
+}
+.fx-stage .st-beam {
+  animation: beam-sway calc(2600ms * var(--fx)) ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -400ms);
+}
+.st-beam-0 { --i: 0; }
+.st-beam-1 { --i: 1; }
+.st-beam-2 { --i: 2; }
+.st-beam-3 { --i: 3; }
+.st-beam-4 { --i: 4; }
+@keyframes beam-sway {
+  from {
+    transform: rotate(calc(var(--rot) - 10deg));
+  }
+  to {
+    transform: rotate(calc(var(--rot) + 10deg));
+  }
+}
+.st-can {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.fx-stage .st-can {
+  animation: can-blink 1.3s ease-in-out infinite alternate;
+}
+@keyframes can-blink {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+.fx-stage .st-amp-led {
+  animation: led 0.9s steps(2) infinite;
+}
+@keyframes led {
+  to { opacity: 0.3; }
+}
+
+.st-person {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.fx-stage .st-person {
+  animation: crowd-jump var(--b, 0.5s) ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+}
+@keyframes crowd-jump {
+  from { transform: translateY(0); }
+  to { transform: translateY(-14px); }
+}
+.st-arm {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.fx-stage .st-arm-l {
+  animation: arm-wave 0.6s ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+}
+.fx-stage .st-arm-r {
+  animation: arm-wave 0.6s ease-in-out infinite alternate-reverse;
+  animation-delay: var(--d, 0s);
+}
+@keyframes arm-wave {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(14deg); }
+}
+.fx-stage .st-arm-clap {
+  animation: clap 0.32s ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+}
+.fx-stage .st-arm-clap2 {
+  animation: clap 0.32s ease-in-out infinite alternate-reverse;
+  animation-delay: var(--d, 0s);
+}
+@keyframes clap {
+  from { transform: rotate(-16deg); }
+  to { transform: rotate(16deg); }
+}
+
+.st-crash {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.fx-stage .st-crash {
+  animation: cymbal-wobble calc(900ms * var(--fx)) ease-out calc(120ms * var(--fx)) both;
+}
+@keyframes cymbal-wobble {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(-12deg) translateY(-4px); }
+  35% { transform: rotate(9deg); }
+  55% { transform: rotate(-5deg); }
+  75% { transform: rotate(2deg); }
+  100% { transform: rotate(0); }
+}
+.st-kick {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.fx-stage .st-kick {
+  animation: kick-thump calc(300ms * var(--fx)) ease-out calc(120ms * var(--fx)) both;
+}
+@keyframes kick-thump {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.st-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.fx-stage .st-spark {
+  animation: twinkle 1.4s ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+}
+@keyframes twinkle {
+  from { opacity: 0.1; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1.4); }
+}
+.st-glowrect {
+  opacity: 0.6;
+}
+.fx-stage .st-glowrect {
+  animation: glow-pulse 2.2s ease-in-out infinite alternate;
+}
+@keyframes glow-pulse {
+  from { opacity: 0.35; }
+  to { opacity: 0.9; }
+}
+
+/* ---------------------------------------------------------- フラッシュ・シェイク */
+
+.flash {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.fx-flash .flash {
+  animation: flash calc(260ms * var(--fx)) ease-out both;
+}
+@keyframes flash {
+  0% { opacity: 0.75; }
+  100% { opacity: 0; }
+}
+.fx-shake {
+  animation: shake calc(420ms * var(--fx)) cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 1px, 0); }
+  20%, 80% { transform: translate3d(4px, -2px, 0); }
+  30%, 50%, 70% { transform: translate3d(-7px, 3px, 0); }
+  40%, 60% { transform: translate3d(7px, -3px, 0); }
+}
+
+/* ---------------------------------------------------------- フィナーレのレイヤー */
+
+.finale-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(64px + var(--sat)) calc(16px + var(--sar)) calc(20px + var(--sab)) calc(16px + var(--sal));
+}
+.stage-logo {
+  position: absolute;
+  top: calc(14px + var(--sat));
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: Impact, 'Arial Black', 'Hiragino Sans', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.35em;
+  color: #ffd166;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.7);
+  opacity: 0;
+}
+.fx-stage .stage-logo {
+  animation: fade-in calc(400ms * var(--fx)) ease calc(900ms * var(--fx)) both;
+}
+
+.banner {
+  width: min(820px, 100%);
+  margin-top: clamp(8px, 4vh, 40px);
+  background: rgba(8, 6, 14, 0.78);
+  border: 2px solid rgba(255, 209, 102, 0.75);
+  box-shadow:
+    0 0 0 4px rgba(8, 6, 14, 0.6),
+    0 0 40px rgba(255, 120, 60, 0.35),
+    inset 0 0 30px rgba(255, 209, 102, 0.08);
+  border-radius: 10px;
+  padding: 12px 20px 16px;
+  color: #fff;
+  text-align: center;
+  opacity: 0;
+  backdrop-filter: blur(2px);
+}
+.fx-stage .banner {
+  animation: banner-drop calc(600ms * var(--fx)) cubic-bezier(0.2, 1.3, 0.4, 1) calc(1000ms * var(--fx)) both;
+}
+@keyframes banner-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.banner-label {
+  font-family: Impact, 'Arial Black', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: #ffd166;
+  margin-bottom: 6px;
+}
+.banner-text {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-height: 34vh;
+  overflow: auto;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(255, 255, 255, 0.35);
+  pointer-events: auto;
+}
+.banner[data-size='xl'] .banner-text { font-size: clamp(26px, 6vw, 56px); }
+.banner[data-size='lg'] .banner-text { font-size: clamp(22px, 4.4vw, 40px); }
+.banner[data-size='md'] .banner-text { font-size: clamp(17px, 3vw, 28px); }
+.banner[data-size='sm'] .banner-text { font-size: clamp(14px, 2.2vw, 20px); text-align: left; }
+.banner[data-size='xs'] .banner-text { font-size: clamp(12px, 1.8vw, 16px); text-align: left; }
+
+/* 横向きスマホなど低い画面ではバナーを小さく */
+@media (max-height: 480px) {
+  .finale-layer {
+    padding-top: calc(40px + var(--sat));
+  }
+  .banner {
+    margin-top: 0;
+    padding: 6px 14px 8px;
+  }
+  .banner-label {
+    font-size: 9px;
+    margin-bottom: 2px;
+  }
+  .banner-text {
+    max-height: 22vh;
+  }
+  .banner[data-size='xl'] .banner-text { font-size: clamp(20px, 4.2vw, 34px); }
+  .banner[data-size='lg'] .banner-text { font-size: clamp(16px, 3.2vw, 26px); }
+  .banner[data-size='md'] .banner-text { font-size: clamp(14px, 2.4vw, 20px); }
+  .stage-logo {
+    display: none;
+  }
+}
+
+.finale-controls {
+  margin-top: auto;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 400ms ease,
+    transform 400ms ease;
+}
+.fx-controls .finale-controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.btn {
+  appearance: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition:
+    transform 100ms,
+    filter 150ms;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-primary {
+  background: #ffd166;
+  color: #1a1206;
+  box-shadow: 0 6px 24px rgba(255, 209, 102, 0.4);
+}
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* 映像演出オフのときはステージを出さず、暗転と文章だけ */
+.fx-novisual .stage {
+  opacity: 0;
+}
+.fx-novisual.fx-stage .banner,
+.fx-novisual .stage-logo {
+  animation-delay: 0s;
+}
+.fx-novisual .finale-controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------------- 音声有効化 */
+
+.audio-unlock {
+  position: absolute;
+  inset: auto 0 calc(24px + var(--sab)) 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.audio-unlock[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------- 設定パネル */
+
+.settings {
+  position: absolute;
+  right: calc(10px + var(--sar));
+  bottom: calc(10px + var(--sab));
+  z-index: 40;
+  font-size: 12px;
+  color: var(--text);
+}
+.settings > summary {
+  list-style: none;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  opacity: 0.35;
+  background: rgba(127, 127, 127, 0.12);
+  transition: opacity 200ms;
+  user-select: none;
+}
+.settings > summary::-webkit-details-marker {
+  display: none;
+}
+.settings > summary:hover,
+.settings[open] > summary {
+  opacity: 1;
+}
+.settings-body {
+  position: absolute;
+  right: 0;
+  bottom: 38px;
+  width: min(320px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+  overflow: auto;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.settings-body h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.settings-row {
+  display: grid;
+  grid-template-columns: 1fr 110px 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+.settings-row select {
+  grid-column: 2 / 4;
+  font: inherit;
+}
+.settings-row input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.settings-row output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.settings-check {
+  grid-template-columns: auto 1fr;
+}
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.settings-actions button {
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.settings-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.settings-note code {
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------- 画面収録モード */
+
+body.clean #topbar .controls,
+body.clean #settings {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------- 動きを減らす */
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-shake {
+    animation: none;
+  }
+  .fx-flash .flash {
+    animation-duration: 120ms;
+  }
+  .fx-stage .anim-drums,
+  .fx-stage .anim-amp-l,
+  .fx-stage .anim-amp-r,
+  .fx-stage .anim-guitar-l,
+  .fx-stage .anim-guitar-r,
+  .fx-stage .anim-crowd,
+  .fx-stage .anim-lights,
+  .fx-stage .anim-sparks {
+    animation-name: fade-in;
+    animation-duration: 400ms;
+  }
+  .fx-stage .st-beam,
+  .fx-stage .st-person,
+  .fx-stage .st-arm,
+  .fx-stage .st-spark,
+  .fx-stage .st-can,
+  .fx-stage .st-amp-led,
+  .fx-stage .st-glowrect,
+  .fx-stage .st-crash,
+  .fx-stage .st-kick {
+    animation: none;
+  }
+  .fx-stage .st-beam {
+    transform: rotate(var(--rot));
+  }
+  .fx-hit .composer-card {
+    transform: none;
+  }
+}

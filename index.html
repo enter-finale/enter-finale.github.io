@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1b1b1f" media="(prefers-color-scheme: dark)" />
+    <title>ENTER FINALE - Enterでライブ終了</title>
+    <meta name="description" content="普通に文章を打っていたはずなのに、Enterを押すとロックバンドのライブがフィナーレを迎える。好きな文章を打って、Enterで締めろ。" />
+
+    <!-- OGP: __SITE_URL__ はビルド時に SITE_URL 環境変数で置換されます -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ENTER FINALE" />
+    <meta property="og:title" content="ENTER FINALE - Enterでライブ終了" />
+    <meta property="og:description" content="文章を打ってEnterを押したらライブが終わる。キーボードがドラム、Enterがフィナーレ。" />
+    <meta property="og:url" content="__SITE_URL__" />
+    <meta property="og:image" content="__SITE_URL__og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ENTER FINALE - Enterでライブ終了" />
+    <meta name="twitter:description" content="文章を打ってEnterを押したらライブが終わる。キーボードがドラム、Enterがフィナーレ。" />
+    <meta name="twitter:image" content="__SITE_URL__og-image.png" />
+    <link rel="icon" href="__SITE_URL__favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div id="app" data-state="ready">
+      <header id="topbar">
+        <div class="topbar-left">
+          <span class="topbar-title">新規メッセージ</span>
+        </div>
+        <div class="topbar-right controls">
+          <span id="status" class="status" hidden></span>
+          <label class="volume" title="音量">
+            <input id="volume" type="range" min="0" max="1" step="0.01" aria-label="音量" />
+          </label>
+          <button id="mute" type="button" class="icon-btn" aria-label="ミュート" aria-pressed="false">🔊</button>
+        </div>
+      </header>
+
+      <main id="composer" class="composer">
+        <div class="composer-card">
+          <div class="composer-meta">
+            <span class="meta-label">宛先</span><span class="meta-value">チーム全員</span>
+          </div>
+          <textarea
+            id="message"
+            class="message"
+            placeholder="ここにメッセージを入力..."
+            rows="6"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="send"
+          ></textarea>
+          <div class="composer-actions">
+            <span class="composer-hint"><kbd>Enter</kbd> で送信 / <kbd>Shift</kbd>+<kbd>Enter</kbd> で改行</span>
+            <button id="send" type="button" class="send-btn">送信</button>
+          </div>
+        </div>
+      </main>
+
+      <div id="stage" class="stage" aria-hidden="true"></div>
+      <div id="flash" class="flash" aria-hidden="true"></div>
+
+      <div id="finale-layer" class="finale-layer">
+        <div class="stage-logo" aria-hidden="true">ENTER FINALE</div>
+        <section id="banner" class="banner" data-size="md" aria-live="polite">
+          <div class="banner-label">TONIGHT'S MESSAGE</div>
+          <p id="banner-text" class="banner-text"></p>
+        </section>
+        <div id="finale-controls" class="finale-controls">
+          <button id="replay" type="button" class="btn btn-primary">もう一度演奏する</button>
+          <button id="share" type="button" class="btn btn-ghost">Xで共有</button>
+        </div>
+      </div>
+
+      <div id="audio-unlock" class="audio-unlock" hidden>
+        <button id="audio-unlock-btn" type="button" class="btn btn-primary">🔊 音を有効にする</button>
+        <p>ブラウザの設定により音声が止められています。タップして有効にしてください。</p>
+      </div>
+
+      <details id="settings" class="settings"></details>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
