@@ -302,12 +302,6 @@ kbd {
   background: #070711;
   transition: opacity 250ms ease;
 }
-.stage-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
 
 .fx-stage .stage {
   opacity: 1;
@@ -328,76 +322,39 @@ kbd {
   color: #ddd;
 }
 
-/* --- 出現アニメーション（SVG グループ） --- */
-.anim {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
+/* --- ステージ写真（Enter ごとにランダムで 1 枚） --- */
+.stage-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   opacity: 0;
+  transform: scale(1.12);
 }
-.fx-stage .anim-drums {
-  animation: pop-in calc(520ms * var(--fx)) cubic-bezier(0.2, 1.5, 0.4, 1) calc(120ms * var(--fx)) both;
+.fx-stage .stage-photo {
+  /* 一瞬で現れて、ゆっくり引いていく（ケン・バーンズ） */
+  animation:
+    photo-in calc(380ms * var(--fx)) ease-out calc(80ms * var(--fx)) both,
+    photo-drift calc(9000ms * var(--fx)) ease-out calc(80ms * var(--fx)) both;
 }
-.fx-stage .anim-amp-l {
-  animation: rise-in calc(480ms * var(--fx)) cubic-bezier(0.2, 1.2, 0.4, 1) calc(200ms * var(--fx)) both;
+/* 写真の上に薄い暗幕を重ねて文章バナーを読みやすくする */
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.05) 35%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
 }
-.fx-stage .anim-amp-r {
-  animation: rise-in calc(480ms * var(--fx)) cubic-bezier(0.2, 1.2, 0.4, 1) calc(260ms * var(--fx)) both;
+@keyframes photo-in {
+  from { opacity: 0; filter: brightness(2.2) contrast(1.2); }
+  to { opacity: 1; filter: none; }
 }
-.fx-stage .anim-guitar-l {
-  animation: fly-in-left calc(600ms * var(--fx)) cubic-bezier(0.2, 1.3, 0.4, 1) calc(240ms * var(--fx)) both;
-}
-.fx-stage .anim-guitar-r {
-  animation: fly-in-right calc(600ms * var(--fx)) cubic-bezier(0.2, 1.3, 0.4, 1) calc(300ms * var(--fx)) both;
-}
-.fx-stage .anim-lights {
-  animation: fade-in calc(400ms * var(--fx)) ease calc(150ms * var(--fx)) both;
-}
-.fx-stage .anim-crowd {
-  animation: rise-in calc(520ms * var(--fx)) cubic-bezier(0.2, 1.2, 0.4, 1) calc(320ms * var(--fx)) both;
-}
-.fx-stage .anim-sparks {
-  animation: fade-in calc(300ms * var(--fx)) ease calc(450ms * var(--fx)) both;
-}
-
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(60px) scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(260px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes fly-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-700px) rotate(-70deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes fly-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(700px) rotate(70deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+@keyframes photo-drift {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
 }
 @keyframes fade-in {
   from {
@@ -406,138 +363,6 @@ kbd {
   to {
     opacity: 1;
   }
-}
-
-/* --- 継続アニメーション（ステージ表示中ずっと） --- */
-.st-beam {
-  transform-box: fill-box;
-  transform-origin: 50% 0;
-  mix-blend-mode: screen;
-}
-.fx-stage .st-beam {
-  animation: beam-sway calc(2600ms * var(--fx)) ease-in-out infinite alternate;
-  animation-delay: calc(var(--i, 0) * -400ms);
-}
-.st-beam-0 { --i: 0; }
-.st-beam-1 { --i: 1; }
-.st-beam-2 { --i: 2; }
-.st-beam-3 { --i: 3; }
-.st-beam-4 { --i: 4; }
-@keyframes beam-sway {
-  from {
-    transform: rotate(calc(var(--rot) - 10deg));
-  }
-  to {
-    transform: rotate(calc(var(--rot) + 10deg));
-  }
-}
-.st-can {
-  filter: drop-shadow(0 0 6px currentColor);
-}
-.fx-stage .st-can {
-  animation: can-blink 1.3s ease-in-out infinite alternate;
-}
-@keyframes can-blink {
-  from { opacity: 0.6; }
-  to { opacity: 1; }
-}
-.fx-stage .st-amp-led {
-  animation: led 0.9s steps(2) infinite;
-}
-@keyframes led {
-  to { opacity: 0.3; }
-}
-
-.st-person {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-.fx-stage .st-person {
-  animation: crowd-jump var(--b, 0.5s) ease-in-out infinite alternate;
-  animation-delay: var(--d, 0s);
-}
-@keyframes crowd-jump {
-  from { transform: translateY(0); }
-  to { transform: translateY(-14px); }
-}
-.st-arm {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-.fx-stage .st-arm-l {
-  animation: arm-wave 0.6s ease-in-out infinite alternate;
-  animation-delay: var(--d, 0s);
-}
-.fx-stage .st-arm-r {
-  animation: arm-wave 0.6s ease-in-out infinite alternate-reverse;
-  animation-delay: var(--d, 0s);
-}
-@keyframes arm-wave {
-  from { transform: rotate(-14deg); }
-  to { transform: rotate(14deg); }
-}
-.fx-stage .st-arm-clap {
-  animation: clap 0.32s ease-in-out infinite alternate;
-  animation-delay: var(--d, 0s);
-}
-.fx-stage .st-arm-clap2 {
-  animation: clap 0.32s ease-in-out infinite alternate-reverse;
-  animation-delay: var(--d, 0s);
-}
-@keyframes clap {
-  from { transform: rotate(-16deg); }
-  to { transform: rotate(16deg); }
-}
-
-.st-crash {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-.fx-stage .st-crash {
-  animation: cymbal-wobble calc(900ms * var(--fx)) ease-out calc(120ms * var(--fx)) both;
-}
-@keyframes cymbal-wobble {
-  0% { transform: rotate(0); }
-  15% { transform: rotate(-12deg) translateY(-4px); }
-  35% { transform: rotate(9deg); }
-  55% { transform: rotate(-5deg); }
-  75% { transform: rotate(2deg); }
-  100% { transform: rotate(0); }
-}
-.st-kick {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-.fx-stage .st-kick {
-  animation: kick-thump calc(300ms * var(--fx)) ease-out calc(120ms * var(--fx)) both;
-}
-@keyframes kick-thump {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.12); }
-  100% { transform: scale(1); }
-}
-
-.st-spark {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.fx-stage .st-spark {
-  animation: twinkle 1.4s ease-in-out infinite alternate;
-  animation-delay: var(--d, 0s);
-}
-@keyframes twinkle {
-  from { opacity: 0.1; transform: scale(0.6); }
-  to { opacity: 1; transform: scale(1.4); }
-}
-.st-glowrect {
-  opacity: 0.6;
-}
-.fx-stage .st-glowrect {
-  animation: glow-pulse 2.2s ease-in-out infinite alternate;
-}
-@keyframes glow-pulse {
-  from { opacity: 0.35; }
-  to { opacity: 0.9; }
 }
 
 /* ---------------------------------------------------------- フラッシュ・シェイク */
@@ -871,30 +696,9 @@ body.clean #settings {
   .fx-flash .flash {
     animation-duration: 120ms;
   }
-  .fx-stage .anim-drums,
-  .fx-stage .anim-amp-l,
-  .fx-stage .anim-amp-r,
-  .fx-stage .anim-guitar-l,
-  .fx-stage .anim-guitar-r,
-  .fx-stage .anim-crowd,
-  .fx-stage .anim-lights,
-  .fx-stage .anim-sparks {
-    animation-name: fade-in;
-    animation-duration: 400ms;
-  }
-  .fx-stage .st-beam,
-  .fx-stage .st-person,
-  .fx-stage .st-arm,
-  .fx-stage .st-spark,
-  .fx-stage .st-can,
-  .fx-stage .st-amp-led,
-  .fx-stage .st-glowrect,
-  .fx-stage .st-crash,
-  .fx-stage .st-kick {
-    animation: none;
-  }
-  .fx-stage .st-beam {
-    transform: rotate(var(--rot));
+  .fx-stage .stage-photo {
+    animation: fade-in 400ms ease both;
+    transform: none;
   }
   .fx-hit .composer-card {
     transform: none;

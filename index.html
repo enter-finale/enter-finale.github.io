@@ -41,7 +41,7 @@
       <main id="composer" class="composer">
         <div class="composer-card">
           <div class="composer-meta">
-            <span class="meta-label">宛先</span><span class="meta-value">チーム全員</span>
+            <span class="meta-label">宛先</span><span class="meta-value">お取引先様</span>
           </div>
           <textarea
             id="message"
@@ -60,7 +60,9 @@
         </div>
       </main>
 
-      <div id="stage" class="stage" aria-hidden="true"></div>
+      <div id="stage" class="stage" aria-hidden="true">
+        <img id="stage-photo" class="stage-photo" alt="" decoding="async" />
+      </div>
       <div id="flash" class="flash" aria-hidden="true"></div>
 
       <div id="finale-layer" class="finale-layer">
@@ -71,7 +73,6 @@
         </section>
         <div id="finale-controls" class="finale-controls">
           <button id="replay" type="button" class="btn btn-primary">もう一度演奏する</button>
-          <button id="share" type="button" class="btn btn-ghost">Xで共有</button>
         </div>
       </div>
 

@@ -38,7 +38,6 @@ Node.js 20 以上を推奨。
 | IME 変換中の Enter | 変換確定のみ（フィナーレにならない） |
 | 送信ボタン | フィナーレ（スマホの確実な操作手段） |
 | もう一度演奏する | 初期状態に戻す |
-| Xで共有 | X の投稿画面を開く（入力した文章は含まない） |
 | 🔊 / スライダー | ミュート / マスター音量 |
 | ⚙（右下） | 開発者向け設定 |
 | URL に `?clean=1` | 操作 UI を全て隠す（画面収録用） |
@@ -69,7 +68,7 @@ WAV 以外（MP3 / OGG / M4A）も `decodeAudioData` が対応していれば使
 - ドラムフィル: `src/core/drumPatterns.ts` の `PATTERNS` に追加すると設定パネルから選べます
 - 打鍵速度 → 音量の対応: `src/audio/DrumEngine.ts` の `velocityFromInterval`
 - フィナーレのタイムライン: `src/ui/FinaleAnimation.ts`（クラス付け外しのタイミング）と `src/style.css`（`calc(〇〇ms * var(--fx))` の部分）
-- ステージの絵: `src/ui/StageScene.ts`（SVG）
+- ステージの写真: `public/images/finale-*.webp`。`src/config.ts` の `FINALE_IMAGES` に並べた中から Enter のたびにランダムで 1 枚（直前と同じ写真は避ける）
 - サービス名・共有テキスト: `src/config.ts`
 
 ## 公開（デプロイ）
@@ -139,10 +138,9 @@ enter-finale/
 │   │   ├── drumPatterns.ts
 │   │   └── settings.ts
 │   └── ui/
-│       ├── StageScene.ts      # ステージ SVG
+│       ├── finaleImage.ts     # ステージ写真のランダム選択・先読み
 │       ├── FinaleAnimation.ts # 演出タイムライン
 │       ├── SettingsPanel.ts
-│       └── share.ts           # X 共有
 └── tests/                     # vitest
 ```
 

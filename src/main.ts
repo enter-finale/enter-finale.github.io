@@ -5,8 +5,7 @@ import { PerformanceController } from './core/PerformanceController';
 import { loadSettings, saveSettings } from './core/settings';
 import { FinaleAnimation } from './ui/FinaleAnimation';
 import { mountSettingsPanel } from './ui/SettingsPanel';
-import { openShare } from './ui/share';
-import { buildStageSVG } from './ui/StageScene';
+import { finaleImageUrl, pickFinaleImage, preloadFinaleImages } from './ui/finaleImage';
 
 function $<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -18,21 +17,21 @@ const app = $<HTMLDivElement>('app');
 const textarea = $<HTMLTextAreaElement>('message');
 const sendBtn = $<HTMLButtonElement>('send');
 const replayBtn = $<HTMLButtonElement>('replay');
-const shareBtn = $<HTMLButtonElement>('share');
 const muteBtn = $<HTMLButtonElement>('mute');
 const volumeInput = $<HTMLInputElement>('volume');
 const status = $<HTMLSpanElement>('status');
 const unlockBox = $<HTMLDivElement>('audio-unlock');
 const unlockBtn = $<HTMLButtonElement>('audio-unlock-btn');
-const stage = $<HTMLDivElement>('stage');
+const stagePhoto = $<HTMLImageElement>('stage-photo');
 
 // 画面収録用: ?clean=1 で操作 UI を隠す
 if (new URLSearchParams(location.search).get('clean') === '1') {
   document.body.classList.add('clean');
 }
 
-// ステージ SVG を一度だけ生成
-stage.innerHTML = buildStageSVG();
+// ステージ写真は Enter の瞬間に待たされないよう、起動後に裏で読み込んでおく
+let lastPhoto = -1;
+preloadFinaleImages();
 
 const settings = loadSettings();
 const audio = new AudioEngine();
@@ -71,6 +70,8 @@ const controller = new PerformanceController(audio, settings, {
   },
   onFinale: (ev) => {
     textarea.blur();
+    lastPhoto = pickFinaleImage(lastPhoto);
+    stagePhoto.src = finaleImageUrl(lastPhoto);
     anim.start(ev.text, ev.visualDelayMs);
   },
 });
@@ -136,8 +137,6 @@ sendBtn.addEventListener('click', () => {
 replayBtn.addEventListener('click', () => {
   controller.reset();
 });
-
-shareBtn.addEventListener('click', () => openShare());
 
 // ---------------------------------------------------------------- 音量・ミュート
 

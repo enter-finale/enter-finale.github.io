@@ -7,11 +7,12 @@ export const APP_TAGLINE = 'Enterでライブ終了';
 export const APP_DESCRIPTION =
   '普通に文章を打っていたはずなのに、Enterを押すとロックバンドのライブがフィナーレを迎える。';
 
-/** X 共有の初期テキスト。入力した文章は含めない。 */
-export const SHARE_TEXT = '文章を打ってEnter押したらライブ終わったwww 🥁🎸';
-
-/** X のハッシュタグ（任意。空配列なら付けない） */
-export const SHARE_HASHTAGS: string[] = ['ENTERFINALE'];
+/**
+ * フィナーレで表示するステージ写真。public/images/ 以下に置く。
+ * Enter のたびにこの中からランダムで 1 枚選ぶ（直前と同じ写真は避ける）。
+ * 枚数を増減したいときはこの配列を編集するだけでよい。
+ */
+export const FINALE_IMAGES = ['finale-1.webp', 'finale-2.webp', 'finale-3.webp', 'finale-4.webp'] as const;
 
 /**
  * 音声ファイル名。public/audio/ 以下に置く。差し替えはファイルを置き換えるだけ。
