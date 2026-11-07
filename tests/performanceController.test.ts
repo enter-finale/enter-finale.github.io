@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AudioEngine, PlayOptions, Voice } from '../src/audio/AudioEngine';
 import { PerformanceController } from '../src/core/PerformanceController';
 import { DEFAULT_SETTINGS, type Settings } from '../src/core/settings';
@@ -7,78 +7,110 @@ import { DEFAULT_SETTINGS, type Settings } from '../src/core/settings';
 function fakeAudio() {
   const plays: { name: string; opts: PlayOptions }[] = [];
   const fake = {
-    loaded: false,
+    loaded: true,
     plays,
     currentTime: 0,
     volume: 0,
     muted: false,
+    stopped: 0,
     play(name: string, opts: PlayOptions = {}): Voice | null {
       plays.push({ name, opts });
       if (!fake.loaded) return null;
-      return {
-        source: {} as AudioBufferSourceNode,
-        gain: { gain: { setTargetAtTime() {} } } as unknown as GainNode,
-        fadeOut() {},
-        stop() {},
-      };
+      return { source: {} as AudioBufferSourceNode, gain: {} as GainNode, fadeOut() {}, stop() {} };
     },
-    stopAll() {},
+    stopAll() {
+      fake.stopped++;
+    },
   };
   return fake;
 }
 
 function makeController(audio: ReturnType<typeof fakeAudio>) {
   const settings: Settings = structuredClone(DEFAULT_SETTINGS);
-  return new PerformanceController(audio as unknown as AudioEngine, settings, {
-    onStateChange: () => {},
+  const events: string[] = [];
+  const c = new PerformanceController(audio as unknown as AudioEngine, settings, {
+    onStateChange: (s) => events.push(s),
     onHit: () => {},
-    onFinale: () => {},
+    onFinale: () => events.push('onFinale'),
   });
+  return { c, events };
 }
 
-const sustains = (audio: ReturnType<typeof fakeAudio>) => audio.plays.filter((p) => p.name === 'guitarSustain');
+const names = (audio: ReturnType<typeof fakeAudio>) => audio.plays.map((p) => p.name);
 
-describe('PerformanceController のギターサステイン', () => {
-  it('音源ロード前に打ち始めても、ロード後の打鍵でサステインが始まる', () => {
+describe('PerformanceController', () => {
+  beforeEach(() => {
+    // finale() は window.setTimeout を使う（node 環境なので差し替え）
+    vi.stubGlobal('window', { setTimeout: globalThis.setTimeout });
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('打鍵ではドラムだけが鳴り、ギターは鳴らない', () => {
     const audio = fakeAudio();
-    const c = makeController(audio);
+    const { c, events } = makeController(audio);
     c.hit();
     c.hit();
+    c.hit(true);
     expect(c.state).toBe('typing');
-    expect(sustains(audio).length).toBeGreaterThanOrEqual(1); // 試行はしている
-    const attemptsBeforeLoad = sustains(audio).length;
-    audio.loaded = true;
-    c.hit();
-    // ロード後の打鍵で改めて開始が試みられる（成功する）
-    expect(sustains(audio).length).toBe(attemptsBeforeLoad + 1);
-    expect(sustains(audio).at(-1)?.opts.loop).toBe(true);
-    // 始まった後は再トリガーしない
-    const before = sustains(audio).length;
-    c.hit();
-    c.hit();
-    expect(sustains(audio).length).toBe(before);
+    expect(events).toEqual(['typing']);
+    expect(names(audio)).toEqual(['snare', 'snare', 'snare']); // classic16 の先頭 3 打
+    expect(names(audio).some((n) => n.startsWith('guitar'))).toBe(false);
   });
 
-  it('ロード済みなら最初の打鍵で 1 回だけ始まり、以降は再トリガーしない', () => {
+  it('Enter でギター（フィナーレ）・キック・クラッシュ・歓声が鳴る', () => {
     const audio = fakeAudio();
-    audio.loaded = true;
-    const c = makeController(audio);
+    const { c, events } = makeController(audio);
     c.hit();
-    c.hit();
-    c.hit();
-    expect(sustains(audio)).toHaveLength(1);
-    expect(sustains(audio)[0].opts.loop).toBe(true);
+    audio.plays.length = 0;
+    c.finale('hello');
+    expect(c.state).toBe('finale');
+    expect(events).toEqual(['typing', 'finale', 'onFinale']);
+    const played = names(audio);
+    expect(played.filter((n) => n === 'guitarFinale')).toHaveLength(1);
+    expect(played).toContain('kick');
+    expect(played).toContain('crash');
+    expect(played).toContain('crowdCheer');
+    // キック・クラッシュ・ギターは同一時刻
+    const t = audio.plays.find((p) => p.name === 'guitarFinale')!.opts.when;
+    expect(audio.plays.find((p) => p.name === 'kick')!.opts.when).toBe(t);
+    expect(audio.plays.find((p) => p.name === 'crash')!.opts.when).toBe(t);
   });
 
-  it('reset 後の 2 周目でもサステインは 1 回だけ始まる', () => {
+  it('フィナーレ中の Enter と打鍵は無視される', () => {
     const audio = fakeAudio();
-    audio.loaded = true;
-    const c = makeController(audio);
+    const { c } = makeController(audio);
+    c.finale('a');
+    const n = audio.plays.length;
+    c.finale('b');
     c.hit();
+    expect(audio.plays.length).toBe(n);
+  });
+
+  it('reset で全音を止めて ready に戻り、2 周目も同じように鳴る', () => {
+    const audio = fakeAudio();
+    const { c } = makeController(audio);
+    c.hit();
+    c.finale('x');
     c.reset();
     expect(c.state).toBe('ready');
+    expect(audio.stopped).toBe(1);
+    audio.plays.length = 0;
     c.hit();
+    expect(names(audio)).toEqual(['snare']);
+    c.finale('y');
+    expect(names(audio).filter((n) => n === 'guitarFinale')).toHaveLength(1);
+  });
+
+  it('音源ロード前の打鍵でも落ちず、ロード後は普通に鳴る', () => {
+    const audio = fakeAudio();
+    audio.loaded = false;
+    const { c } = makeController(audio);
     c.hit();
-    expect(sustains(audio)).toHaveLength(2);
+    expect(c.state).toBe('typing');
+    audio.loaded = true;
+    c.hit();
+    expect(names(audio)).toEqual(['snare', 'snare']);
   });
 });

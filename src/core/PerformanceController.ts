@@ -4,8 +4,9 @@
  *
  * 音の発音は AudioEngine / DrumEngine に、映像は UI 側に委譲し、
  * ここでは「いつ何を起こすか」だけを決める。
+ * 打鍵中はドラムのみ。ギターは Enter のフィナーレでだけ鳴る。
  */
-import type { AudioEngine, Voice } from '../audio/AudioEngine';
+import type { AudioEngine } from '../audio/AudioEngine';
 import { DrumEngine } from '../audio/DrumEngine';
 import type { Settings } from './settings';
 
@@ -30,7 +31,6 @@ export const FINALE_SETTLE_MS = 4200;
 
 export class PerformanceController {
   private _state: AppState = 'ready';
-  private guitar: Voice | null = null;
   private timers: number[] = [];
   readonly drums: DrumEngine;
 
@@ -54,10 +54,6 @@ export class PerformanceController {
     if (this.drums.patternId !== this.settings.patternId) this.drums.setPattern(this.settings.patternId);
     this.audio.volume = this.settings.volume;
     this.audio.muted = this.settings.muted;
-    if (this.guitar) {
-      const t = this.audio.currentTime;
-      this.guitar.gain.gain.setTargetAtTime(g.guitarSustain, t, 0.05);
-    }
   }
 
   private setState(next: AppState) {
@@ -67,28 +63,13 @@ export class PerformanceController {
     this.cb.onStateChange(next, prev);
   }
 
-  /** 1 打鍵 */
+  /** 1 打鍵 = ドラム 1 打 */
   hit(soft = false) {
     if (this._state === 'finale' || this._state === 'finished') return;
     const when = this.audio.currentTime + Math.max(0, this.settings.audioOffsetMs) / 1000;
     if (this._state === 'ready') this.setState('typing');
-    // 最初の打鍵時点では音源がまだロード中で play が null を返すことがある
-    // （PC は入力欄が自動フォーカスなので 1 文字目の keydown が AudioContext 生成を兼ねる）。
-    // 始まるまで毎打鍵で再試行する。始まった後は startGuitar 側で再トリガーしない。
-    if (!this.guitar) this.startGuitar(when);
     const r = this.drums.hit(performance.now(), { soft, when });
     if (r) this.cb.onHit(r.voice, r.velocity);
-  }
-
-  private startGuitar(when: number) {
-    if (this.guitar) return; // 再トリガーしない
-    this.guitar = this.audio.play('guitarSustain', {
-      when,
-      loop: true,
-      gain: this.settings.gains.guitarSustain,
-      fadeIn: 0.12,
-      reverb: 0.12,
-    });
   }
 
   /** Enter / 送信ボタン。finale 中は何もしない（多重発火防止） */
@@ -99,15 +80,10 @@ export class PerformanceController {
     const t0 = now + Math.max(0, offset);
     const g = this.settings.gains;
 
-    // 1. 伸ばしていたギターを素早く切る（フィナーレのギターに引き継ぐ）
-    if (this.guitar) {
-      this.guitar.fadeOut(0.06, t0);
-      this.guitar = null;
-    }
-    // 2. キック + クラッシュ + ギター を同一時刻で
+    // 1. キック + クラッシュ + ギター を同一時刻で
     this.drums.finaleHit(t0);
     this.audio.play('guitarFinale', { when: t0, gain: g.guitarFinale, reverb: 0.3 });
-    // 3. 歓声は少し遅れて立ち上がる
+    // 2. 歓声は少し遅れて立ち上がる
     this.audio.play('crowdCheer', { when: t0 + 0.3, gain: g.crowd, fadeIn: 0.45, reverb: 0.1 });
 
     this.setState('finale');
@@ -127,10 +103,6 @@ export class PerformanceController {
   reset() {
     for (const t of this.timers) clearTimeout(t);
     this.timers = [];
-    if (this.guitar) {
-      this.guitar.fadeOut(0.1);
-      this.guitar = null;
-    }
     this.audio.stopAll(0.25);
     this.drums.reset();
     this.setState('ready');

@@ -14,7 +14,6 @@ export interface Settings {
     tomLow: number;
     kick: number;
     crash: number;
-    guitarSustain: number;
     guitarFinale: number;
     crowd: number;
   };
@@ -36,7 +35,6 @@ export const DEFAULT_SETTINGS: Settings = {
     tomLow: 1.0,
     kick: 1.0,
     crash: 0.8,
-    guitarSustain: 0.45,
     guitarFinale: 0.95,
     crowd: 0.7,
   },
@@ -56,7 +54,13 @@ export function loadSettings(): Settings {
     return {
       ...structuredClone(DEFAULT_SETTINGS),
       ...parsed,
-      gains: { ...DEFAULT_SETTINGS.gains, ...(parsed.gains ?? {}) },
+      // 既知のキーだけ取り込む（過去バージョンで保存された不要なキーは捨てる）
+      gains: Object.fromEntries(
+        (Object.keys(DEFAULT_SETTINGS.gains) as (keyof Settings['gains'])[]).map((k) => [
+          k,
+          typeof parsed.gains?.[k] === 'number' ? parsed.gains[k] : DEFAULT_SETTINGS.gains[k],
+        ]),
+      ) as Settings['gains'],
     };
   } catch {
     return structuredClone(DEFAULT_SETTINGS);

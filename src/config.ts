@@ -21,7 +21,6 @@ export const SAMPLE_FILES = {
   tomLow: 'tom-low.wav',
   kick: 'kick.wav',
   crash: 'crash.wav',
-  guitarSustain: 'guitar-sustain.wav',
   guitarFinale: 'guitar-finale.wav',
   crowdCheer: 'crowd-cheer.wav',
 } as const;

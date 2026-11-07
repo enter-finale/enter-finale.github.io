@@ -31,7 +31,6 @@ export function mountSettingsPanel(o: SettingsPanelOptions) {
     { label: 'フロアタム', get: () => g.tomLow, set: (v) => (g.tomLow = v), min: 0, max: 1.5, step: 0.05 },
     { label: 'キック', get: () => g.kick, set: (v) => (g.kick = v), min: 0, max: 1.5, step: 0.05 },
     { label: 'クラッシュ', get: () => g.crash, set: (v) => (g.crash = v), min: 0, max: 1.5, step: 0.05 },
-    { label: 'ギター（サステイン）', get: () => g.guitarSustain, set: (v) => (g.guitarSustain = v), min: 0, max: 1.2, step: 0.05 },
     { label: 'ギター（フィナーレ）', get: () => g.guitarFinale, set: (v) => (g.guitarFinale = v), min: 0, max: 1.5, step: 0.05 },
     { label: '観客の歓声', get: () => g.crowd, set: (v) => (g.crowd = v), min: 0, max: 1.5, step: 0.05 },
     { label: '発音タイミング (ms)', get: () => settings.audioOffsetMs, set: (v) => (settings.audioOffsetMs = v), min: -200, max: 200, step: 5 },

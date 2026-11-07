@@ -186,8 +186,8 @@ async function renderCrash(sr: number): Promise<AudioBuffer> {
 // ---------------------------------------------------------------- guitar
 
 /**
- * 完全に周期的なパワーコード波形を JS で生成する。
- * ループ長を周期の整数倍にすることで、ループ境界のクリックを防ぐ。
+ * 完全に周期的なパワーコード波形を JS で生成する（フィナーレのギターの元波形）。
+ * ループ長を周期の整数倍にして、内部ループ境界のクリックを防ぐ。
  */
 function buildPeriodicChordBuffer(ctx: BaseAudioContext, seconds: number): { buffer: AudioBuffer; loopLen: number } {
   const sr = ctx.sampleRate;
@@ -215,43 +215,6 @@ function buildPeriodicChordBuffer(ctx: BaseAudioContext, seconds: number): { buf
     data[i] = v;
   }
   return { buffer: buf, loopLen };
-}
-
-async function renderGuitarSustain(sr: number): Promise<{ buffer: AudioBuffer; loopStart: number; loopEnd: number }> {
-  const preRoll = 0.8; // フィルタの過渡応答を捨てるための助走
-  const loopSeconds = 2.0;
-  const tmpCtx = offline(0.01, sr);
-  const { buffer: raw, loopLen } = buildPeriodicChordBuffer(tmpCtx, loopSeconds);
-  const loopDur = loopLen / sr;
-  const total = preRoll + loopDur + 0.05;
-  const ctx = offline(total, sr);
-  const src = ctx.createBufferSource();
-  src.buffer = raw;
-  src.loop = true;
-  src.loopStart = 0;
-  src.loopEnd = loopDur;
-  const pre = ctx.createBiquadFilter();
-  pre.type = 'highpass';
-  pre.frequency.value = 120;
-  const drive = ctx.createGain();
-  drive.gain.value = 4;
-  const shaper = ctx.createWaveShaper();
-  shaper.curve = makeDistortionCurve(6);
-  shaper.oversample = '2x';
-  const cab = ctx.createBiquadFilter();
-  cab.type = 'lowpass';
-  cab.frequency.value = 3800;
-  cab.Q.value = 0.8;
-  const presence = ctx.createBiquadFilter();
-  presence.type = 'peaking';
-  presence.frequency.value = 1800;
-  presence.gain.value = 3;
-  const out = ctx.createGain();
-  out.gain.value = 0.55;
-  src.connect(pre).connect(drive).connect(shaper).connect(cab).connect(presence).connect(out).connect(ctx.destination);
-  src.start(0);
-  const rendered = await ctx.startRendering();
-  return { buffer: rendered, loopStart: preRoll, loopEnd: preRoll + loopDur };
 }
 
 async function renderGuitarFinale(sr: number): Promise<AudioBuffer> {
@@ -375,9 +338,6 @@ async function renderCrowd(sr: number): Promise<AudioBuffer> {
 
 export interface FallbackSample {
   buffer: AudioBuffer;
-  /** ループ再生用の範囲（秒）。未指定なら buffer 全体 */
-  loopStart?: number;
-  loopEnd?: number;
 }
 
 /** 指定サンプルの代替音源をレンダリングして返す */
@@ -395,8 +355,6 @@ export async function renderFallback(name: SampleName, sampleRate: number): Prom
       return { buffer: await renderTom(sampleRate, 200, 100, 0.6) };
     case 'crash':
       return { buffer: await renderCrash(sampleRate) };
-    case 'guitarSustain':
-      return await renderGuitarSustain(sampleRate);
     case 'guitarFinale':
       return { buffer: await renderGuitarFinale(sampleRate) };
     case 'crowdCheer':

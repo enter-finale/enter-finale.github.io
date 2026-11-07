@@ -13,8 +13,6 @@ import { renderFallback, renderImpulseResponse, type FallbackSample } from './Fa
 export interface LoadedSample {
   name: SampleName;
   buffer: AudioBuffer;
-  loopStart?: number;
-  loopEnd?: number;
   /** true なら WAV ではなく代替音源 */
   isFallback: boolean;
 }
@@ -230,7 +228,7 @@ export class AudioEngine {
         console.info(`[audio] ${SAMPLE_FILES[name]} が無いので代替音源を使います (${(err as Error).message})`);
       }
       const fb: FallbackSample = await renderFallback(name, ctx.sampleRate);
-      return { name, buffer: fb.buffer, loopStart: fb.loopStart, loopEnd: fb.loopEnd, isFallback: true };
+      return { name, buffer: fb.buffer, isFallback: true };
     }
   }
 
@@ -247,13 +245,7 @@ export class AudioEngine {
     const source = ctx.createBufferSource();
     source.buffer = sample.buffer;
     source.playbackRate.value = opts.rate ?? 1;
-    if (opts.loop) {
-      source.loop = true;
-      if (sample.loopStart !== undefined && sample.loopEnd !== undefined) {
-        source.loopStart = sample.loopStart;
-        source.loopEnd = sample.loopEnd;
-      }
-    }
+    if (opts.loop) source.loop = true;
     const gain = ctx.createGain();
     const g = opts.gain ?? 1;
     if (opts.fadeIn && opts.fadeIn > 0) {
@@ -268,8 +260,7 @@ export class AudioEngine {
       send.gain.value = opts.reverb;
       gain.connect(send).connect(this.reverb);
     }
-    const startOffset = opts.loop && sample.loopStart !== undefined ? sample.loopStart : 0;
-    source.start(when, startOffset);
+    source.start(when);
 
     const voice: Voice = {
       source,
