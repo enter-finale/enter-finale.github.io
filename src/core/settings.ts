@@ -10,11 +10,9 @@ export interface Settings {
   gains: {
     snare: number;
     tomHigh: number;
-    tomMid: number;
     tomLow: number;
-    kick: number;
-    crash: number;
-    guitarFinale: number;
+    /** Enter の「ジャーン」（キック・クラッシュ・ギターをまとめた 1 音） */
+    finale: number;
     crowd: number;
   };
   patternId: string;
@@ -30,12 +28,9 @@ export const DEFAULT_SETTINGS: Settings = {
   muted: false,
   gains: {
     snare: 0.9,
-    tomHigh: 0.85,
-    tomMid: 0.9,
+    tomHigh: 0.9,
     tomLow: 1.0,
-    kick: 1.0,
-    crash: 0.8,
-    guitarFinale: 0.95,
+    finale: 1.0,
     crowd: 0.7,
   },
   patternId: DEFAULT_PATTERN_ID,

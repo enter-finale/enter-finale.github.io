@@ -2,8 +2,11 @@
  * ドラムフィルのパターン定義。
  * 打鍵のたびに次のステップへ進み、末尾まで来たら先頭へ戻る。
  * 新しいパターンを足すときは PATTERNS に追加するだけでよい。
+ *
+ * ここでの 'snare' は「スネア」という役割で、実際に鳴るサンプル（snareA / snareB）は
+ * DrumEngine が 1 打ごとに交互に選ぶ。
  */
-export type DrumVoice = 'snare' | 'tomHigh' | 'tomMid' | 'tomLow' | 'kick' | 'crash';
+export type DrumVoice = 'snare' | 'tomHigh' | 'tomLow';
 
 export interface DrumPattern {
   id: string;
@@ -18,14 +21,14 @@ export const PATTERNS: DrumPattern[] = [
     steps: [
       'snare', 'snare', 'snare', 'snare',
       'snare', 'snare', 'tomHigh', 'tomHigh',
-      'tomMid', 'tomMid', 'tomLow', 'tomLow',
-      'snare', 'tomHigh', 'tomMid', 'tomLow',
+      'tomLow', 'tomLow', 'snare', 'snare',
+      'tomHigh', 'tomHigh', 'tomLow', 'tomLow',
     ],
   },
   {
     id: 'rolling8',
     label: 'ローリング 8打',
-    steps: ['snare', 'snare', 'tomHigh', 'tomHigh', 'tomMid', 'tomMid', 'tomLow', 'tomLow'],
+    steps: ['snare', 'snare', 'tomHigh', 'tomHigh', 'tomLow', 'tomLow', 'tomHigh', 'tomLow'],
   },
   {
     id: 'snareOnly',
@@ -35,7 +38,7 @@ export const PATTERNS: DrumPattern[] = [
   {
     id: 'triplets',
     label: '3連 (スネア → ハイ → ロー)',
-    steps: ['snare', 'tomHigh', 'tomLow', 'snare', 'tomMid', 'tomLow', 'snare', 'tomHigh', 'tomMid', 'tomLow', 'tomLow', 'kick'],
+    steps: ['snare', 'tomHigh', 'tomLow', 'snare', 'tomHigh', 'tomLow', 'snare', 'snare', 'tomHigh', 'tomHigh', 'tomLow', 'tomLow'],
   },
 ];
 

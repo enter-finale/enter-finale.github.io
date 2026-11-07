@@ -47,7 +47,7 @@ describe('PerformanceController', () => {
     vi.unstubAllGlobals();
   });
 
-  it('打鍵ではドラムだけが鳴り、ギターは鳴らない', () => {
+  it('打鍵ではドラムだけが鳴り（スネアは A/B 交互）、フィナーレ音は鳴らない', () => {
     const audio = fakeAudio();
     const { c, events } = makeController(audio);
     c.hit();
@@ -55,11 +55,12 @@ describe('PerformanceController', () => {
     c.hit(true);
     expect(c.state).toBe('typing');
     expect(events).toEqual(['typing']);
-    expect(names(audio)).toEqual(['snare', 'snare', 'snare']); // classic16 の先頭 3 打
-    expect(names(audio).some((n) => n.startsWith('guitar'))).toBe(false);
+    expect(names(audio)).toEqual(['snareA', 'snareB', 'snareA']); // classic16 の先頭 3 打
+    expect(names(audio)).not.toContain('finale');
+    expect(names(audio)).not.toContain('crowdCheer');
   });
 
-  it('Enter でギター（フィナーレ）・キック・クラッシュ・歓声が鳴る', () => {
+  it('Enter で「ジャーン」が 1 回鳴り、歓声がその直後に続く', () => {
     const audio = fakeAudio();
     const { c, events } = makeController(audio);
     c.hit();
@@ -67,15 +68,10 @@ describe('PerformanceController', () => {
     c.finale('hello');
     expect(c.state).toBe('finale');
     expect(events).toEqual(['typing', 'finale', 'onFinale']);
-    const played = names(audio);
-    expect(played.filter((n) => n === 'guitarFinale')).toHaveLength(1);
-    expect(played).toContain('kick');
-    expect(played).toContain('crash');
-    expect(played).toContain('crowdCheer');
-    // キック・クラッシュ・ギターは同一時刻
-    const t = audio.plays.find((p) => p.name === 'guitarFinale')!.opts.when;
-    expect(audio.plays.find((p) => p.name === 'kick')!.opts.when).toBe(t);
-    expect(audio.plays.find((p) => p.name === 'crash')!.opts.when).toBe(t);
+    expect(names(audio)).toEqual(['finale', 'crowdCheer']);
+    const t = audio.plays[0].opts.when!;
+    expect(audio.plays[1].opts.when).toBeCloseTo(t + 0.25, 5);
+    expect(audio.plays[1].opts.fadeIn).toBeGreaterThan(0);
   });
 
   it('フィナーレ中の Enter と打鍵は無視される', () => {
@@ -98,9 +94,9 @@ describe('PerformanceController', () => {
     expect(audio.stopped).toBe(1);
     audio.plays.length = 0;
     c.hit();
-    expect(names(audio)).toEqual(['snare']);
+    expect(names(audio)).toEqual(['snareA']); // スネアも A からやり直し
     c.finale('y');
-    expect(names(audio).filter((n) => n === 'guitarFinale')).toHaveLength(1);
+    expect(names(audio).filter((n) => n === 'finale')).toHaveLength(1);
   });
 
   it('音源ロード前の打鍵でも落ちず、ロード後は普通に鳴る', () => {
@@ -111,6 +107,6 @@ describe('PerformanceController', () => {
     expect(c.state).toBe('typing');
     audio.loaded = true;
     c.hit();
-    expect(names(audio)).toEqual(['snare', 'snare']);
+    expect(names(audio)).toEqual(['snareA', 'snareB']);
   });
 });

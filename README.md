@@ -52,14 +52,11 @@ Node.js 20 以上を推奨。
 
 | ファイル名 | 用途 |
 |---|---|
-| `snare.wav` | スネア |
+| `snare-1.wav` / `snare-2.wav` | スネア（1 打ごとに交互に鳴る） |
 | `tom-high.wav` | ハイタム |
-| `tom-mid.wav` | ミッドタム |
-| `tom-low.wav` | フロアタム |
-| `kick.wav` | キック（フィナーレ） |
-| `crash.wav` | クラッシュ（フィナーレ） |
-| `guitar-finale.wav` | Enter のパワーコード（余韻込み 5〜10 秒） |
-| `crowd-cheer.wav` | 観客の歓声（アプリ側で 0.45 秒フェードイン） |
+| `tom-low.wav` | ロータム |
+| `enter.wav` | Enter の「ジャーン」（キック・クラッシュ・ギターをまとめた 1 音、余韻込み） |
+| `crowd-cheer.wav` | 観客の歓声（アプリ側で 0.3 秒フェードイン） |
 
 詳しい推奨尺などは [public/audio/README.md](public/audio/README.md) を参照。
 ファイル名を変えたい場合は `src/config.ts` の `SAMPLE_FILES` を編集します。

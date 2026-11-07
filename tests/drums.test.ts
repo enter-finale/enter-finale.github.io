@@ -44,13 +44,32 @@ function fakeAudio() {
 }
 
 describe('DrumEngine', () => {
-  it('1 打鍵 = 1 打で、パターン通りに進む', () => {
+  it('1 打鍵 = 1 打で、パターン通りに進む（スネアは A/B を交互に）', () => {
     const { audio, calls } = fakeAudio();
     const d = new DrumEngine(audio);
     const p = getPattern('classic16');
-    for (let i = 0; i < 20; i++) d.hit(i * 100);
+    const results: NonNullable<ReturnType<DrumEngine['hit']>>[] = [];
+    for (let i = 0; i < 20; i++) results.push(d.hit(i * 100)!);
     expect(calls).toHaveLength(20);
-    calls.forEach((c, i) => expect(c.name).toBe(voiceAt(p, i)));
+    let snareTurn = 0;
+    calls.forEach((c, i) => {
+      const voice = voiceAt(p, i);
+      expect(results[i].voice).toBe(voice);
+      if (voice === 'snare') {
+        expect(c.name).toBe(snareTurn % 2 === 0 ? 'snareA' : 'snareB');
+        snareTurn++;
+      } else {
+        expect(c.name).toBe(voice);
+      }
+    });
+  });
+
+  it('スネアのみのパターンでは A → B → A → B と交互に鳴る', () => {
+    const { audio, calls } = fakeAudio();
+    const d = new DrumEngine(audio);
+    d.setPattern('snareOnly');
+    for (let i = 0; i < 4; i++) d.hit(i * 100);
+    expect(calls.map((c) => c.name)).toEqual(['snareA', 'snareB', 'snareA', 'snareB']);
   });
 
   it('Backspace などの soft 打は音量が半分', () => {
@@ -80,22 +99,12 @@ describe('DrumEngine', () => {
     }
   });
 
-  it('フィナーレはキックとクラッシュを同一時刻で鳴らす', () => {
-    const { audio, calls } = fakeAudio();
-    const d = new DrumEngine(audio);
-    d.finaleHit(12.5);
-    const kick = calls.find((c) => c.name === 'kick')!;
-    const crash = calls.find((c) => c.name === 'crash')!;
-    expect(kick.opts.when).toBe(12.5);
-    expect(crash.opts.when).toBe(12.5);
-  });
-
-  it('reset で先頭に戻る', () => {
+  it('reset で先頭に戻り、スネアも A からやり直す', () => {
     const { audio, calls } = fakeAudio();
     const d = new DrumEngine(audio);
     for (let i = 0; i < 7; i++) d.hit(i * 100);
     d.reset();
     d.hit(1000);
-    expect(calls[7].name).toBe('snare');
+    expect(calls[7].name).toBe('snareA');
   });
 });

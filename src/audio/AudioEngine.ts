@@ -215,7 +215,9 @@ export class AudioEngine {
   private async loadOne(ctx: AudioContext, name: SampleName): Promise<LoadedSample> {
     const url = `${this.baseUrl}audio/${SAMPLE_FILES[name]}`;
     try {
-      const res = await fetch(url, { cache: 'force-cache' });
+      // 通常の HTTP キャッシュに任せる。force-cache だと「以前そのファイル名が無かった頃の HTML 応答」まで
+      // 再利用してしまい、後から音源を置いても読み込めないことがある
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const type = res.headers.get('content-type') ?? '';
       // Vite dev / SPA fallback で index.html が返るケースを弾く

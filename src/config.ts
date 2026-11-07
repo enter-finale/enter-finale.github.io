@@ -13,15 +13,19 @@ export const SHARE_TEXT = '文章を打ってEnter押したらライブ終わっ
 /** X のハッシュタグ（任意。空配列なら付けない） */
 export const SHARE_HASHTAGS: string[] = ['ENTERFINALE'];
 
-/** 音声ファイル名。public/audio/ 以下に置く。差し替えはファイルを置き換えるだけ。 */
+/**
+ * 音声ファイル名。public/audio/ 以下に置く。差し替えはファイルを置き換えるだけ。
+ * - snareA / snareB : 打鍵のスネア。1 打ごとに交互に鳴らす（同じ音の連打感を避ける）
+ * - tomHigh / tomLow: フィルで使う 2 つのタム
+ * - finale          : Enter で鳴る「ジャーン」。キック・クラッシュ・ギターを 1 本にまとめた音
+ * - crowdCheer      : フィナーレ後の観客の歓声
+ */
 export const SAMPLE_FILES = {
-  snare: 'snare.wav',
+  snareA: 'snare-1.wav',
+  snareB: 'snare-2.wav',
   tomHigh: 'tom-high.wav',
-  tomMid: 'tom-mid.wav',
   tomLow: 'tom-low.wav',
-  kick: 'kick.wav',
-  crash: 'crash.wav',
-  guitarFinale: 'guitar-finale.wav',
+  finale: 'enter.wav',
   crowdCheer: 'crowd-cheer.wav',
 } as const;
 

@@ -83,9 +83,11 @@ async function renderKick(sr: number): Promise<AudioBuffer> {
   return ctx.startRendering();
 }
 
-async function renderSnare(sr: number): Promise<AudioBuffer> {
+/** variant=0 が A、1 が B。B は少し高め・短めにして交互に鳴らしたとき違いが分かるようにする */
+async function renderSnare(sr: number, variant = 0): Promise<AudioBuffer> {
   const ctx = offline(0.45, sr);
   const t = 0;
+  const pitch = 1 + 0.07 * variant;
   // 胴鳴り
   for (const [f, g, d] of [
     [185, 0.55, 0.12],
@@ -93,19 +95,19 @@ async function renderSnare(sr: number): Promise<AudioBuffer> {
   ] as const) {
     const osc = ctx.createOscillator();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(f * 1.3, t);
-    osc.frequency.exponentialRampToValueAtTime(f, t + 0.02);
-    const env = gainEnv(ctx, t, g, d);
+    osc.frequency.setValueAtTime(f * pitch * 1.3, t);
+    osc.frequency.exponentialRampToValueAtTime(f * pitch, t + 0.02);
+    const env = gainEnv(ctx, t, g, d * (1 - 0.15 * variant));
     osc.connect(env).connect(ctx.destination);
     osc.start(t);
     osc.stop(t + 0.3);
   }
   // スナッピー（ノイズ）
   const noise = ctx.createBufferSource();
-  noise.buffer = noiseBuffer(ctx, 0.45, 11);
+  noise.buffer = noiseBuffer(ctx, 0.45, 11 + variant * 5);
   const hp = ctx.createBiquadFilter();
   hp.type = 'highpass';
-  hp.frequency.value = 900;
+  hp.frequency.value = 900 + 300 * variant;
   const bp = ctx.createBiquadFilter();
   bp.type = 'peaking';
   bp.frequency.value = 3200;
@@ -263,6 +265,31 @@ async function renderGuitarFinale(sr: number): Promise<AudioBuffer> {
   return ctx.startRendering();
 }
 
+// ---------------------------------------------------------------- finale
+
+/**
+ * Enter の「ジャーン」。実音源 (enter.wav) はキック・クラッシュ・ギターを 1 本にまとめてあるので、
+ * 代替音源も同じ形（1 バッファ）で用意する。各パーツをレンダリングしてから足し合わせる。
+ */
+async function renderFinale(sr: number): Promise<AudioBuffer> {
+  const [kick, crash, guitar] = await Promise.all([renderKick(sr), renderCrash(sr), renderGuitarFinale(sr)]);
+  const len = Math.max(kick.length, crash.length, guitar.length);
+  const out = offline(len / sr, sr).createBuffer(1, len, sr);
+  const data = out.getChannelData(0);
+  const parts: Array<[AudioBuffer, number]> = [
+    [kick, 1.0],
+    [crash, 0.8],
+    [guitar, 0.9],
+  ];
+  for (const [buf, g] of parts) {
+    const src = buf.getChannelData(0);
+    for (let i = 0; i < buf.length; i++) data[i] += src[i] * g;
+  }
+  // 足し合わせで 0dB を超えた分はソフトクリップで丸める
+  for (let i = 0; i < len; i++) data[i] = Math.tanh(data[i]);
+  return out;
+}
+
 // ---------------------------------------------------------------- crowd
 
 async function renderCrowd(sr: number): Promise<AudioBuffer> {
@@ -343,20 +370,16 @@ export interface FallbackSample {
 /** 指定サンプルの代替音源をレンダリングして返す */
 export async function renderFallback(name: SampleName, sampleRate: number): Promise<FallbackSample> {
   switch (name) {
-    case 'kick':
-      return { buffer: await renderKick(sampleRate) };
-    case 'snare':
-      return { buffer: await renderSnare(sampleRate) };
+    case 'snareA':
+      return { buffer: await renderSnare(sampleRate, 0) };
+    case 'snareB':
+      return { buffer: await renderSnare(sampleRate, 1) };
     case 'tomHigh':
       return { buffer: await renderTom(sampleRate, 420, 240, 0.35) };
-    case 'tomMid':
-      return { buffer: await renderTom(sampleRate, 300, 165, 0.45) };
     case 'tomLow':
       return { buffer: await renderTom(sampleRate, 200, 100, 0.6) };
-    case 'crash':
-      return { buffer: await renderCrash(sampleRate) };
-    case 'guitarFinale':
-      return { buffer: await renderGuitarFinale(sampleRate) };
+    case 'finale':
+      return { buffer: await renderFinale(sampleRate) };
     case 'crowdCheer':
       return { buffer: await renderCrowd(sampleRate) };
   }

@@ -27,11 +27,8 @@ export function mountSettingsPanel(o: SettingsPanelOptions) {
   const sliders: SliderSpec[] = [
     { label: 'スネア', get: () => g.snare, set: (v) => (g.snare = v), min: 0, max: 1.5, step: 0.05 },
     { label: 'ハイタム', get: () => g.tomHigh, set: (v) => (g.tomHigh = v), min: 0, max: 1.5, step: 0.05 },
-    { label: 'ミッドタム', get: () => g.tomMid, set: (v) => (g.tomMid = v), min: 0, max: 1.5, step: 0.05 },
-    { label: 'フロアタム', get: () => g.tomLow, set: (v) => (g.tomLow = v), min: 0, max: 1.5, step: 0.05 },
-    { label: 'キック', get: () => g.kick, set: (v) => (g.kick = v), min: 0, max: 1.5, step: 0.05 },
-    { label: 'クラッシュ', get: () => g.crash, set: (v) => (g.crash = v), min: 0, max: 1.5, step: 0.05 },
-    { label: 'ギター（フィナーレ）', get: () => g.guitarFinale, set: (v) => (g.guitarFinale = v), min: 0, max: 1.5, step: 0.05 },
+    { label: 'ロータム', get: () => g.tomLow, set: (v) => (g.tomLow = v), min: 0, max: 1.5, step: 0.05 },
+    { label: 'フィナーレ（ジャーン）', get: () => g.finale, set: (v) => (g.finale = v), min: 0, max: 1.5, step: 0.05 },
     { label: '観客の歓声', get: () => g.crowd, set: (v) => (g.crowd = v), min: 0, max: 1.5, step: 0.05 },
     { label: '発音タイミング (ms)', get: () => settings.audioOffsetMs, set: (v) => (settings.audioOffsetMs = v), min: -200, max: 200, step: 5 },
     { label: '演出の速さ', get: () => settings.fxSpeed, set: (v) => (settings.fxSpeed = v), min: 0.5, max: 2, step: 0.1 },

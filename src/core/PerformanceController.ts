@@ -4,7 +4,7 @@
  *
  * 音の発音は AudioEngine / DrumEngine に、映像は UI 側に委譲し、
  * ここでは「いつ何を起こすか」だけを決める。
- * 打鍵中はドラムのみ。ギターは Enter のフィナーレでだけ鳴る。
+ * 打鍵中はドラムのみ。Enter では「ジャーン」（キック・クラッシュ・ギターをまとめた 1 音）と歓声が鳴る。
  */
 import type { AudioEngine } from '../audio/AudioEngine';
 import { DrumEngine } from '../audio/DrumEngine';
@@ -50,7 +50,7 @@ export class PerformanceController {
   /** 設定変更をエンジンに反映する */
   applySettings() {
     const g = this.settings.gains;
-    this.drums.gains = { snare: g.snare, tomHigh: g.tomHigh, tomMid: g.tomMid, tomLow: g.tomLow, kick: g.kick, crash: g.crash };
+    this.drums.gains = { snare: g.snare, tomHigh: g.tomHigh, tomLow: g.tomLow };
     if (this.drums.patternId !== this.settings.patternId) this.drums.setPattern(this.settings.patternId);
     this.audio.volume = this.settings.volume;
     this.audio.muted = this.settings.muted;
@@ -80,11 +80,11 @@ export class PerformanceController {
     const t0 = now + Math.max(0, offset);
     const g = this.settings.gains;
 
-    // 1. キック + クラッシュ + ギター を同一時刻で
-    this.drums.finaleHit(t0);
-    this.audio.play('guitarFinale', { when: t0, gain: g.guitarFinale, reverb: 0.3 });
-    // 2. 歓声は少し遅れて立ち上がる
-    this.audio.play('crowdCheer', { when: t0 + 0.3, gain: g.crowd, fadeIn: 0.45, reverb: 0.1 });
+    // 1. 「ジャーン」（キック + クラッシュ + ギターを 1 本にまとめた音源）
+    this.audio.play('finale', { when: t0, gain: g.finale, reverb: 0.2 });
+    // 2. 歓声はジャーンの直後に立ち上がる
+    this.audio.play('crowdCheer', { when: t0 + 0.25, gain: g.crowd, fadeIn: 0.3, reverb: 0.1 });
+    this.drums.reset();
 
     this.setState('finale');
     // 映像側の遅延：audioOffset が負なら映像を遅らせる、正なら音が遅れるので映像も合わせる
