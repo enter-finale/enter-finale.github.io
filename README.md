@@ -159,16 +159,18 @@ enter-finale/
 - **IME**: Chrome/Mac (`isComposing`)、Windows (`keyCode 229` / `key='Process'`)、Safari/Firefox（`compositionend` 後に Enter の keydown が来る）の 3 パターンを個別にガード
 - **二重発音防止**: keydown で鳴らした 60ms 以内の `beforeinput` は無視。スマホは keydown が `Unidentified` なので `beforeinput` 側だけが鳴る。ペースト・予測変換は 1 イベント 1 打
 - **自動再生規制**: 最初の pointerdown / touchend / keydown で `AudioContext` を生成・resume。それでも止まっていれば「音を有効にする」ボタンを表示
+- **ロード前の打鍵**: PC は入力欄が自動フォーカスなので、1 文字目の keydown が `AudioContext` 生成と音源ロードの開始を兼ねる。その時点では `play` が null を返すため、ギターのサステインは「始まるまで毎打鍵で再試行」する（1 回きりだと 1 周目だけサステインが無い状態になり、2 周目で初めて鳴るのがバグに見える）
 - **prefers-reduced-motion**: シェイクと継続アニメーションを止め、フェードのみにする
 
 ## テスト結果
 
-### 自動テスト（`npm test`、34 件すべて成功）
+### 自動テスト（`npm test`、37 件すべて成功）
 
 - キー判定: 通常 Enter / Shift+Enter / IME 変換中 Enter（Chrome・Windows・Safari 順序）/ 文字・空白・絵文字 / Backspace / 修飾キー単独 / auto-repeat / Ctrl・Cmd ショートカット / スマホの Unidentified
 - 入力イベント判定: keydown 直後の二重発音防止 / ペースト 1 打 / スマホ改行キーのフィナーレ / 予測変換の連打防止 / 削除系
 - ドラム: パターン循環 / 1 打鍵 1 打 / 速度 → 音量 / 揺らぎ / フィナーレ同時刻 / リセット
 - 共有: URL 組み立て、入力文を含まない
+- 状態機械: 音源ロード前に打ち始めてもロード後の打鍵でサステインが始まる / 始まった後は再トリガーしない / reset 後の 2 周目
 
 ### ブラウザでの動作検証（Windows / Chromium 系の内蔵ブラウザ、代替音源）
 
@@ -177,7 +179,7 @@ enter-finale/
 - 初期画面がメール作成画面に見えること（ライト / ダーク両テーマ）
 - 英字・日本語・記号・空白・Backspace で 1 打鍵 = 1 打（5 文字＋空白＋Backspace = 7 打、Shift 単独 = 0 打）
 - ペースト（20 文字）= 1 打
-- 最初の打鍵でギターのループが始まり、以降再トリガーされない
+- 最初の打鍵でギターのループが始まり、以降再トリガーされない（ページを開いて即打鍵した場合も、ロード完了直後の打鍵から始まる）
 - 合成イベントによる IME 3 パターンでフィナーレが発火しないこと、確定後の Enter で発火すること
 - Shift+Enter で改行が入ること
 - Enter / 送信ボタン / 空欄 Enter でフィナーレ

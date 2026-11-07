@@ -71,10 +71,11 @@ export class PerformanceController {
   hit(soft = false) {
     if (this._state === 'finale' || this._state === 'finished') return;
     const when = this.audio.currentTime + Math.max(0, this.settings.audioOffsetMs) / 1000;
-    if (this._state === 'ready') {
-      this.setState('typing');
-      this.startGuitar(when);
-    }
+    if (this._state === 'ready') this.setState('typing');
+    // 最初の打鍵時点では音源がまだロード中で play が null を返すことがある
+    // （PC は入力欄が自動フォーカスなので 1 文字目の keydown が AudioContext 生成を兼ねる）。
+    // 始まるまで毎打鍵で再試行する。始まった後は startGuitar 側で再トリガーしない。
+    if (!this.guitar) this.startGuitar(when);
     const r = this.drums.hit(performance.now(), { soft, when });
     if (r) this.cb.onHit(r.voice, r.velocity);
   }
