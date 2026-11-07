@@ -24,10 +24,13 @@ const unlockBox = $<HTMLDivElement>('audio-unlock');
 const unlockBtn = $<HTMLButtonElement>('audio-unlock-btn');
 const stagePhoto = $<HTMLImageElement>('stage-photo');
 
+const query = new URLSearchParams(location.search);
 // 画面収録用: ?clean=1 で操作 UI を隠す
-if (new URLSearchParams(location.search).get('clean') === '1') {
+if (query.get('clean') === '1') {
   document.body.classList.add('clean');
 }
+// 開発者向け設定（右下の ⚙）は ?dev=1 のときだけ出す
+const devMode = query.get('dev') === '1';
 
 // ステージ写真は Enter の瞬間に待たされないよう、起動後に裏で読み込んでおく
 let lastPhoto = -1;
@@ -160,21 +163,25 @@ muteBtn.addEventListener('click', () => {
 });
 syncVolumeUI();
 
-// ---------------------------------------------------------------- 開発者向け設定
+// ---------------------------------------------------------------- 開発者向け設定（?dev=1 のときだけ）
 
-mountSettingsPanel({
-  root: $('settings'),
-  settings,
-  onChange: () => {
-    controller.applySettings();
-    saveSettings(settings);
-  },
-  onTestFinale: () => {
-    void ensureAudio();
-    if (controller.state === 'finale' || controller.state === 'finished') controller.reset();
-    controller.finale(textarea.value || 'テスト');
-  },
-});
+if (devMode) {
+  mountSettingsPanel({
+    root: $('settings'),
+    settings,
+    onChange: () => {
+      controller.applySettings();
+      saveSettings(settings);
+    },
+    onTestFinale: () => {
+      void ensureAudio();
+      if (controller.state === 'finale' || controller.state === 'finished') controller.reset();
+      controller.finale(textarea.value || 'テスト');
+    },
+  });
+} else {
+  $('settings').remove();
+}
 
 // ---------------------------------------------------------------- モバイルのキーボード対応
 

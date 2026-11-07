@@ -402,27 +402,13 @@ kbd {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(64px + var(--sat)) calc(16px + var(--sar)) calc(20px + var(--sab)) calc(16px + var(--sal));
-}
-.stage-logo {
-  position: absolute;
-  top: calc(14px + var(--sat));
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: Impact, 'Arial Black', 'Hiragino Sans', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.35em;
-  color: #ffd166;
-  text-shadow: 0 0 12px rgba(255, 209, 102, 0.7);
-  opacity: 0;
-}
-.fx-stage .stage-logo {
-  animation: fade-in calc(400ms * var(--fx)) ease calc(900ms * var(--fx)) both;
+  /* 文章は画面のど真ん中。ボタンは下端に absolute で置くので中央計算に影響しない */
+  justify-content: center;
+  padding: calc(16px + var(--sat)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
 }
 
 .banner {
   width: min(820px, 100%);
-  margin-top: clamp(8px, 4vh, 40px);
   background: rgba(8, 6, 14, 0.78);
   border: 2px solid rgba(255, 209, 102, 0.75);
   box-shadow:
@@ -430,7 +416,7 @@ kbd {
     0 0 40px rgba(255, 120, 60, 0.35),
     inset 0 0 30px rgba(255, 209, 102, 0.08);
   border-radius: 10px;
-  padding: 12px 20px 16px;
+  padding: 18px 24px 20px;
   color: #fff;
   text-align: center;
   opacity: 0;
@@ -449,13 +435,6 @@ kbd {
     transform: none;
   }
 }
-.banner-label {
-  font-family: Impact, 'Arial Black', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.4em;
-  color: #ffd166;
-  margin-bottom: 6px;
-}
 .banner-text {
   margin: 0;
   font-weight: 700;
@@ -463,7 +442,7 @@ kbd {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-  max-height: 34vh;
+  max-height: 60vh;
   overflow: auto;
   text-shadow:
     0 2px 0 rgba(0, 0, 0, 0.6),
@@ -478,30 +457,22 @@ kbd {
 
 /* 横向きスマホなど低い画面ではバナーを小さく */
 @media (max-height: 480px) {
-  .finale-layer {
-    padding-top: calc(40px + var(--sat));
-  }
   .banner {
-    margin-top: 0;
-    padding: 6px 14px 8px;
-  }
-  .banner-label {
-    font-size: 9px;
-    margin-bottom: 2px;
+    padding: 8px 14px 10px;
   }
   .banner-text {
-    max-height: 22vh;
+    max-height: 50vh;
   }
   .banner[data-size='xl'] .banner-text { font-size: clamp(20px, 4.2vw, 34px); }
   .banner[data-size='lg'] .banner-text { font-size: clamp(16px, 3.2vw, 26px); }
   .banner[data-size='md'] .banner-text { font-size: clamp(14px, 2.4vw, 20px); }
-  .stage-logo {
-    display: none;
-  }
 }
 
 .finale-controls {
-  margin-top: auto;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(20px + var(--sab));
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -555,8 +526,7 @@ kbd {
 .fx-novisual .stage {
   opacity: 0;
 }
-.fx-novisual.fx-stage .banner,
-.fx-novisual .stage-logo {
+.fx-novisual.fx-stage .banner {
   animation-delay: 0s;
 }
 .fx-novisual .finale-controls {

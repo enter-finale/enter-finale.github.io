@@ -39,7 +39,7 @@ Node.js 20 以上を推奨。
 | 送信ボタン | フィナーレ（スマホの確実な操作手段） |
 | もう一度演奏する | 初期状態に戻す |
 | 🔊 / スライダー | ミュート / マスター音量 |
-| ⚙（右下） | 開発者向け設定 |
+| URL に `?dev=1` | 右下に ⚙（開発者向け設定）を出す。通常は非表示 |
 | URL に `?clean=1` | 操作 UI を全て隠す（画面収録用） |
 
 文字入力で使うキー（R, F, H など）はショートカットとして横取りしていません。
@@ -61,7 +61,7 @@ Node.js 20 以上を推奨。
 ファイル名を変えたい場合は `src/config.ts` の `SAMPLE_FILES` を編集します。
 WAV 以外（MP3 / OGG / M4A）も `decodeAudioData` が対応していれば使えます。
 
-各楽器の音量バランスは右下 ⚙ の設定パネルで調整できます（localStorage に保存）。初期値は `src/core/settings.ts` の `DEFAULT_SETTINGS`。
+各楽器の音量バランスは URL に `?dev=1` を付けると出る右下 ⚙ の設定パネルで調整できます（localStorage に保存）。初期値は `src/core/settings.ts` の `DEFAULT_SETTINGS`。
 
 ## ドラムパターン・演出の変更
 
