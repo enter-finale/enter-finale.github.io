@@ -94,7 +94,8 @@ SITE_URL=https://example.com/ npm run build
 手動でビルドする場合:
 
 ```bash
-BASE_PATH=/<リポジトリ名>/ SITE_URL=https://<ユーザー名>.github.io/<リポジトリ名>/ npm run build
+BASE_PATH=/<リポジトリ名>/ SITE_URL=https://<オーナー名>.github.io/<リポジトリ名>/ npm run build
+# リポジトリ名が <オーナー名>.github.io の場合は BASE_PATH=/ SITE_URL=https://<オーナー名>.github.io/
 ```
 
 ### Cloudflare Pages

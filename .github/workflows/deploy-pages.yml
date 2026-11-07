@@ -1,5 +1,5 @@
 # GitHub Pages へのデプロイ（リポジトリの Settings > Pages で Source を "GitHub Actions" にしてから有効化）
-# サブパス公開 (https://<user>.github.io/<repo>/) 向けに BASE_PATH と SITE_URL を自動で組み立てます。
+# BASE_PATH と SITE_URL はリポジトリ名から自動で組み立てます（<owner>.github.io ならルート、それ以外はサブパス）。
 name: Deploy to GitHub Pages
 
 on:
@@ -27,10 +27,27 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # リポジトリ名が <owner>.github.io ならルート (https://<owner>.github.io/)、
+      # それ以外はサブパス (https://<owner>.github.io/<repo>/) で公開する
+      - name: Resolve public URL
+        id: url
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          owner="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          if [ "$REPO" = "${owner}.github.io" ]; then
+            base="/"
+          else
+            base="/${REPO}/"
+          fi
+          echo "base_path=${base}" >> "$GITHUB_OUTPUT"
+          echo "site_url=https://${owner}.github.io${base}" >> "$GITHUB_OUTPUT"
+          echo "BASE_PATH=${base} SITE_URL=https://${owner}.github.io${base}"
       - name: Build
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
-          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          BASE_PATH: ${{ steps.url.outputs.base_path }}
+          SITE_URL: ${{ steps.url.outputs.site_url }}
         run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
