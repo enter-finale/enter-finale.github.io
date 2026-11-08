@@ -20,20 +20,8 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
+  /* OS のダークモード設定に関わらず常に同じ配色（PC とスマホで見た目を揃える） */
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1b1b1f;
-    --card: #26262c;
-    --text: #ecebe6;
-    --muted: #9a99a3;
-    --line: #3a3a42;
-    --accent: #5b8cff;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 40px -12px rgba(0, 0, 0, 0.6);
-    color-scheme: dark;
-  }
 }
 
 * {
