@@ -22,7 +22,6 @@ npm run build      # 本番ビルド → dist/
 npm run preview    # 本番ビルドのプレビュー
 npm test           # 単体テスト (vitest)
 npm run typecheck  # 型チェック
-npm run og         # OGP 画像を再生成 (scripts/og-image.svg → public/og-image.png)
 ```
 
 Node.js 20 以上を推奨。
@@ -75,40 +74,33 @@ WAV 以外（MP3 / OGG / M4A）も `decodeAudioData` が対応していれば使
 
 静的サイトなので `dist/` をそのまま置けばどこでも動きます。
 
-### 共通: OGP の URL
+### 共通: URL を貼ったときのプレビュー
 
-X のカードには `og:image` の**絶対 URL** が必要です。公開 URL が決まったら、ビルド時に `SITE_URL` を渡してください。
-
-```bash
-SITE_URL=https://example.com/ npm run build
-```
-
-`.env.example` をコピーして `.env.production` に書いても同じです（Vite が読み込みます）。未指定の場合は `og:image` が相対パスになり、X でカードが出ません。
+Slack / LINE / X などに URL を貼ってもサムネや説明文が出ないよう、OGP・Twitter カード・`description` のメタタグは**意図的に入れていません**。`<title>` も「ENTER FINALE」だけにしています。
 
 ### GitHub Pages
 
 1. リポジトリを作成して push
 2. Settings > Pages > Source を **GitHub Actions** にする
-3. 同梱の [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) が `main` への push で自動ビルド＆デプロイします（`BASE_PATH` と `SITE_URL` はリポジトリ名から自動で組み立て）
+3. 同梱の [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) が `main` への push で自動ビルド＆デプロイします（`BASE_PATH` はリポジトリ名から自動で組み立て）
 
 手動でビルドする場合:
 
 ```bash
-BASE_PATH=/<リポジトリ名>/ SITE_URL=https://<オーナー名>.github.io/<リポジトリ名>/ npm run build
-# リポジトリ名が <オーナー名>.github.io の場合は BASE_PATH=/ SITE_URL=https://<オーナー名>.github.io/
+BASE_PATH=/<リポジトリ名>/ npm run build
+# リポジトリ名が <オーナー名>.github.io の場合は BASE_PATH=/（指定不要）
 ```
 
 ### Cloudflare Pages
 
 1. Cloudflare Pages で Git リポジトリを接続
 2. Build command: `npm run build`、Build output directory: `dist`
-3. 環境変数に `SITE_URL=https://<project>.pages.dev/`（独自ドメインならそちら）を設定
-4. `BASE_PATH` は不要（ルート公開）
+3. `BASE_PATH` は不要（ルート公開）
 
 ### 独自ドメイン
 
-- GitHub Pages: リポジトリの Settings > Pages > Custom domain で設定し、`BASE_PATH` を外して（`/`）`SITE_URL` を独自ドメインにしてビルド。`public/CNAME` にドメイン名を書いたファイルを置くとビルドに含まれます
-- Cloudflare Pages: Custom domains で追加し、`SITE_URL` を差し替えて再デプロイ
+- GitHub Pages: リポジトリの Settings > Pages > Custom domain で設定し、`BASE_PATH` を外して（`/`）ビルド。`public/CNAME` にドメイン名を書いたファイルを置くとビルドに含まれます
+- Cloudflare Pages: Custom domains で追加するだけ
 
 ## 技術構成
 
@@ -116,14 +108,10 @@ Vite + TypeScript（Vanilla、フレームワークなし）+ Web Audio API + SV
 
 ```
 enter-finale/
-├── index.html                 # OGP メタ、画面の骨組み
+├── index.html                 # 画面の骨組み（OGP は意図的に無し）
 ├── public/
 │   ├── audio/                 # 音声素材置き場（README あり）
-│   ├── og-image.png           # OGP 画像（npm run og で再生成）
 │   └── favicon.svg
-├── scripts/
-│   ├── og-image.svg           # OGP 画像の元
-│   └── generate-og.mjs
 ├── src/
 │   ├── main.ts                # 配線
 │   ├── config.ts              # 名前・共有テキスト・音声ファイル名
